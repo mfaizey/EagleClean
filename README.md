@@ -1,3 +1,5 @@
+
+
 # Eagle Clean
 
 > Proof-of-work tracking for custodial routes — a .NET MAUI mobile app plus a web portal.
@@ -6,8 +8,9 @@
 - **Mobile app:** `Custodian/` (.NET MAUI, Android)
 - **Web portal:** https://eagleclean-fe.azurewebsites.net/
 - **Backend API:** https://eagleclean-be.azurewebsites.net/swagger/index.html
-- **Demo video:** [[EagleClean Demo](./EagleClean%20Demo.mp4)](https://drive.google.com/file/d/1USpzS4oNzE11u0VZUxsJqe2rTxwGEkvx/view?usp=sharing)
+- **Demo video:** 
 
+https://github.com/user-attachments/assets/5b64ad9f-8cd1-4ff0-a2ad-fb9559e965ae
 
 ---
 
