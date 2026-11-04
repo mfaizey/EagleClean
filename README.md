@@ -6,7 +6,7 @@
 - **Mobile app:** `Custodian/` (.NET MAUI, Android)
 - **Web portal:** https://eagleclean-fe.azurewebsites.net/
 - **Backend API:** https://eagleclean-be.azurewebsites.net/swagger/index.html
-- **Demo video:** https://user-images.githubusercontent.com/40601789/227719210-60e0bdda-e626-4cb5-8d25-c86bdd415d36.mp4
+- **Demo video:** [EagleClean Demo](./EagleClean%20Demo.mp4)
 
 
 ---
