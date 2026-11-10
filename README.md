@@ -36,7 +36,7 @@ https://github.com/user-attachments/assets/5b64ad9f-8cd1-4ff0-a2ad-fb9559e965ae
 
 Eagle Clean is a proof-of-work solution for custodians. A custodian logs in with their USPS badge, follows an assigned cleaning route, completes the route's tasks (with planned vs. actual times), captures evidence (photos, signatures, barcodes), and submits a signed record. Records are stored locally on the device and synchronized to the backend when connectivity is available, so work continues offline.
 
-The mobile app is used in the field on IPC mobiles; the web portal is used to review submitted proof-of-work, routes, and (TODO: describe portal audience — supervisors / admins / auditors).
+The mobile app is used in the field on IPC mobiles. The web portal is used by supervisors, facility and district/region managers, and administrators to review submitted proof-of-work, manage facilities, routes, custodians and user accounts, approve certifications, run completion and 4776 reports, and handle helpdesk tickets.
 
 ## Features
 
@@ -63,14 +63,13 @@ The mobile app is used in the field on IPC mobiles; the web portal is used to re
 ### Web portal
 
 - Hosted at https://eagleclean-fe.azurewebsites.net/
-- Backed by the `EagleClean.API` surface, which suggests portal capabilities for:
-  - User/role management and sign-in (`/user/*`, `/users/*`, `/user/roles`)
-  - Facility and route management (`/facility/*`, `/facilities/*`, `/routes/*`)
-  - Custodian management and supervisor comments (`/custodian/*`, `/custodians/*`)
-  - Supervisor dashboards, radar upload tracking, certifications approval (`/supervisor/*`)
-  - Completion/reporting dashboards (`/reports/*`, `/userprofile/mydashboard/*`)
-  - Helpdesk ticketing (`/helpdesk/ticket/*`)
-- _Confirm which of these are exposed in the portal UI — details to be documented by the maintainer._
+- **Audience:** supervisors, facility/district/region managers, administrators (including super admins), and helpdesk staff. Custodians use the mobile app, not the portal.
+- **Sign-in and roles:** account sign-in, registration, and role and status management (`/user/*`, `/users/*`, `/user/roles`)
+- **Facilities and routes:** facility details, schedules, staffing, routes, and 4776/4852 notes (`/facility/*`, `/facilities/*`, `/routes/*`)
+- **Custodians:** custodian records, activation status, and supervisor comments (`/custodian/*`, `/custodians/*`)
+- **Supervisor tools:** dashboards, radar upload tracking, and certification approval (`/supervisor/*`)
+- **Reporting:** completion reports by facility, district, region and custodian, 4776 daily/weekly reports, work records, and TMK summaries (`/reports/*`, `/userprofile/mydashboard/*`)
+- **Helpdesk:** tickets with comments, attachments, assignment, status and history (`/helpdesk/ticket/*`)
 
 ### Backend API
 
@@ -94,7 +93,7 @@ The mobile app is used in the field on IPC mobiles; the web portal is used to re
   - **Guaranteed upload:** `/guaranteedupload/*` (device info, errors, tmk records)
   - **CW import:** `/cwimport/schedule/{projectId}/{facilityId}/{year}`
 - **Mobile app usage:** the MAUI app currently calls only:
-  - `GET /facilities/{latitude}/{longitude}/{radius}/{date}` — nearby facilities (app currently omits `{date}`; verify against deployed API)
+  - `GET /facilities/{latitude}/{longitude}/{radius}/{date}` — nearby facilities (the app currently omits `{date}`; the deployed API route expects it)
   - `POST /workrecord/merge` — submit a `WorkRecordSaveDTO` (`{ id, json }`)
 
 ## Architecture
@@ -112,9 +111,9 @@ The mobile app is used in the field on IPC mobiles; the web portal is used to re
          │                                          │  Database  │
          │                                          └────────────┘
          ▼
-┌────────────────────┐
-│  Web portal (SPA?) │  ◄── reviews / reports
-└────────────────────┘
+┌─────────────────────────────┐
+│  Web portal (Blazor Server) │  ◄── reviews / reports
+└─────────────────────────────┘
 ```
 
 
@@ -158,7 +157,7 @@ The mobile app is used in the field on IPC mobiles; the web portal is used to re
 ## Repository Layout
 
 ```
-Eagle-Clean/
+EagleClean/
 ├── README.md
 ├── Custodian.sln
 ├── key.keystore                 # Android signing keystore (dev)
@@ -189,8 +188,8 @@ Eagle-Clean/
 ### 1. Clone
 
 ```bash
-git clone https://github.com/mfaizey/Eagle-Clean.git
-cd Eagle-Clean
+git clone https://github.com/mfaizey/EagleClean.git
+cd EagleClean
 ```
 
 ### 2. Configure
@@ -239,24 +238,40 @@ dotnet build Custodian.csproj -f net7.0-android -t:Run
 - Mobile login is badge-based (7/12-digit USPS badge with Mod 10 check digit) plus a captured signature; no password is used on-device.
 - Portal/API auth uses Bearer tokens and an `ECApiKey` header; user accounts, roles, and status are managed via `/user/*` and `/users/*`.
 
+## Known Limitations
 
+- **Source not published:** this repository currently contains only documentation. The `Custodian/` MAUI project, `Custodian.sln`, and the portal and API source are not checked in.
+- **Android only:** the app targets `net7.0-android` only. iOS and Windows are not supported.
+- **.NET 7 is out of support:** .NET 7 reached end of support in May 2024. The project needs to move to a supported .NET and MAUI version before any new release.
+- **Only today's records sync:** the app loads and uploads only records whose filename matches today's date (`yyyyMMdd`). Records left over from earlier days stay in `ToUpload/` and are never sent.
+- **Facility lookup can fail:** the app calls `/facilities/{latitude}/{longitude}/{radius}` without the `{date}` segment the deployed API expects.
+- **Hardcoded configuration:** the API base URL and Syncfusion license key are set in code, and the dev keystore password (`123456`) is in the repo.
+- **Shared storage path:** offline data is written to `/storage/emulated/0/Custodian/`, which relies on legacy external-storage access and may break on newer Android versions with scoped storage.
+- **No automated tests or CI:** there is no test project or build pipeline.
+- **Portal UI not documented:** the portal features above come from the API surface and still need to be checked against the live UI.
 
+## Contributing
 
+This is a client project built for USPS with IPC Mobile, and it is not open to outside contributions right now.
 
+For collaborators with access:
+
+1. Branch from `main` (`feature/<short-name>` or `fix/<short-name>`).
+2. Keep secrets out of commits. Use your own Syncfusion license, signing keystore, and `ECApiKey`, and never commit production values.
+3. Build `Custodian.csproj` for `net7.0-android` and test on a device or emulator before opening a pull request.
+4. If you change API calls, update the Backend API and Configuration sections of this README.
+5. Open a pull request against `main` describing the change and how you tested it.
+
+Report bugs or ask questions through GitHub Issues, or contact the maintainer (@mfaizey).
+
+## License
+
+Copyright © 2026 mfaizey. All rights reserved.
+
+This code was developed for USPS in association with IPC Mobile and is shared for portfolio and reference purposes only. No license is granted to use, copy, modify, or distribute it without written permission from the copyright holder. "USPS" and related marks belong to their respective owners.
 
 ## Acknowledgements
 
 - USPS and IPC Mobile for the project and devices.
 - Syncfusion for MAUI components (SignaturePad, ProgressBar).
 - .NET MAUI and the CommunityToolkit teams.
-
----
-
-## Suggested Repository Metadata
-
-
-
-- **Description:** .NET MAUI (Android) + web portal for proof-of-work tracking of custodial routes; built for USPS with IPC mobiles.
-- **Suggested topics:** `blazor`,`dotnet-maui`, `maui`, `android`, `xamarin-alternative`, `proof-of-work`, `usps`, `offline-first`, `azure`, `csharp`, `mvvm`
-
-Maintainer: @mfaizey 
